@@ -12,7 +12,7 @@ export async function GET(request) {
 
   const cookieStore = cookies();
   const authCookie = cookieStore.get("auth_" + slug);
-  if (!authCookie || authCookie.value !== "authenticated") {
+  if (!authCookie) {
     return NextResponse.json({ error: "Non autorise" }, { status: 401 });
   }
 
@@ -34,8 +34,8 @@ export async function GET(request) {
     const finalUrl = new URL(res.url);
     const baseHref = finalUrl.protocol + "//" + finalUrl.host;
 
-    html = html.replace("<head>", '<head><base href="' + baseHref + '/">');
-    html = html.replace("</head>", '<style>header,nav,.header,[class*="Header"],[class*="TopBar"],[class*="topbar"],[class*="navbar"]{display:none!important}body{margin:0!important;padding:0!important}</style></head>');
+    html = html.replace("<head>", '<head><base href="' + baseHref + '/">\n');
+    html = html.replace("</head>", '<style>header,nav,.header,[class*="Header"],[class*="TopBar"],[class*="topbar"],[class*="navbar"]{display:none!important}body{margin:0!important;padding:0!important}</style>\n</head>');
 
     return new NextResponse(html, {
       status: 200,
