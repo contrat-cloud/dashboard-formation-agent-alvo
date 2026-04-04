@@ -1,14 +1,50 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import dashboards from "../../../dashboards.config";
+const dashboards = require("../../../dashboards.config");
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get("slug");
-  if (!slug) return NextResponse.json({ error: "Slug manquant" }, { status: 400 });
+
+  if (!slug) {
+    return NextResponse.json({ error: "Missing slug" }, { status: 400 });
+  }
+
   const cookieStore = cookies();
   const authCookie = cookieStore.get("auth_" + slug);
-  if (!authCookie) return NextResponse.json({ error: "Non autorise" }, { status: 401 });
+  if (!authCookie || authCookie.value !== "authenticated") {
+    return NextResponse.json({ error: "Non autorise" }, { status: 401 });
+  }
+
   const dashboard = dashboards.find((d) => d.slug === slug);
-  if (!dashboard) return NextResponse.json({ error: "Dashboard introuvable" }, { status: 404 });
-  return NextResponse.json({ dustUrl: dashboard.dustUrl, name: dashboard.name });
+  if (!dashboard) {
+    return NextResponse.json({ error: "Dashboard introuvable" }, { status: 404 });
+  }
+
+  try {
+    const res = await fetch(dashboard.dustUrl, {
+      redirect: "follow",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+    });
+
+    let html = await res.text();
+    const finalUrl = new URL(res.url);
+    const baseHref = finalUrl.protocol + "//" + finalUrl.host;
+
+    html = html.replace("<head>", '<head><base href="' + baseHref + '/">');
+    html = html.replace("</head>", '<style>header,nav,.header,[class*="Header"],[class*="TopBar"],[class*="topbar"],[class*="navbar"]{display:none!important}body{margin:0!important;padding:0!important}</style></head>');
+
+    return new NextResponse(html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+      },
+    });
+  } catch (err) {
+    return NextResponse.json({ error: "Proxy error: " + err.message }, { status: 502 });
+  }
 }
