@@ -9,20 +9,25 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    return [
-      {
-        source: "/dp/:path*",
-        destination: "https://app.dust.tt/:path*",
-      },
-      {
-        source: "/dv/:path*",
-        destination: "https://viz.dust.tt/:path*",
-      },
-      {
-        source: "/assets/:path*",
-        destination: "https://app.dust.tt/assets/:path*",
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          source: "/dp/:path*",
+          destination: "https://app.dust.tt/:path*",
+        },
+        {
+          source: "/dv/:path*",
+          destination: "https://viz.dust.tt/:path*",
+        },
+      ],
+      afterFiles: [],
+      fallback: [
+        {
+          source: "/:path*",
+          destination: "https://app.dust.tt/:path*",
+        },
+      ],
+    };
   },
 };
 
