@@ -8,5 +8,18 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/dp/:path*",
+        destination: "https://app.dust.tt/:path*",
+      },
+      {
+        source: "/dv/:path*",
+        destination: "https://viz.dust.tt/:path*",
+      },
+    ];
+  },
 };
+
 module.exports = nextConfig;
