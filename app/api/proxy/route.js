@@ -31,10 +31,12 @@ export async function GET(request) {
     });
 
     let html = await res.text();
-    const finalUrl = new URL(res.url);
-    const baseHref = finalUrl.protocol + "//" + finalUrl.host;
 
-    html = html.replace("<head>", '<head><base href="' + baseHref + '/">\n');
+    // Rewrite absolute Dust URLs to go through our proxy rewrites
+    html = html.replace(/https:\/\/app\.dust\.tt/g, "/dp");
+    html = html.replace(/https:\/\/viz\.dust\.tt/g, "/dv");
+
+    // Inject CSS to hide Dust header/nav
     html = html.replace("</head>", '<style>header,nav,.header,[class*="Header"],[class*="TopBar"],[class*="topbar"],[class*="navbar"]{display:none!important}body{margin:0!important;padding:0!important}</style>\n</head>');
 
     return new NextResponse(html, {
